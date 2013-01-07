@@ -31,14 +31,13 @@ module iRobotMobileC @safe() {
   }
 }
 
-implementation
+implmentation
 {
  uint8_t tosID;
  uint16_t bufferLen = 50;
  message_t *radioBuf[50];
  bool flagBuf[50];
  uint16_t sent=0;
-  uint16_t temp=0;
  uint16_t empty=0;
  uint8_t dataNumber=0;
  uint8_t noAck = 0;
@@ -65,28 +64,9 @@ event void Boot.booted() {
 	call RadioControl.start();
 }
 ///////////////////
-event void RadioControl.startDone(error_t err) {
-	if (err == SUCCESS) {
-		call dataTimer.startPeriodic(600);
-		call sendTimer.startPeriodic(600);
-	}
-	else {
-	  call RadioControl.start();
-	}
-}
-///////////////////
 event message_t *RadioReceive.receive(message_t *msg,void *payload,uint8_t len){
-	uint8_t srcid,data,c;
-	iRobotRadioMsg * btrpkt = (iRobotRadioMsg * ) payload;
-	srcid = btrpkt->nodeid;
-	c = btrpkt->control ;
-	if (srcid == 1 && noConnection && c == 44)
-		{
-		noConnection= FALSE;
-		noAck = 0;
-		sent = temp ;
-		call sendTimer.startPeriodic(300);
-		}
+
+
 }
 //////////////////
 event void dataTimer.fired() {
@@ -115,9 +95,7 @@ bool store(uint8_t id,uint8_t data) {
 		return TRUE ;
 		}
 	else
-		{return FALSE;
-		call Leds.led2On();
-		}
+		return FALSE;
 }
 //////////////////
 event void sendTimer.fired() {
@@ -137,8 +115,8 @@ event void RadioSend.sendDone(message_t* msg, error_t error){
 		if(noAck == 3)
 			{
 			noConnection = TRUE;
+			call Leds.led2On();
 			call sendTimer.stop();
-			temp = sent ;
 			//call dataTimer.stop();
 			//sendCmnd(1);
 			}
@@ -150,10 +128,8 @@ event void RadioSend.sendDone(message_t* msg, error_t error){
 			sent++ ;
 			if(sent == bufferLen)
 				sent=0;
-			if(bufferFull) {
+			if(bufferFull)
 				bufferFull=FALSE;
-				call Leds.led2Off();
-				}
 			if(flagBuf[sent] == FALSE )
 				sentEmpty = TRUE ;
 			}
@@ -175,4 +151,3 @@ event void RadioSend.sendDone(message_t* msg, error_t error){
 
 
 } // end of implementation
-
